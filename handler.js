@@ -2,6 +2,21 @@ const { SQS, DynamoDB } = require("aws-sdk");
 
 const sqs = new SQS();
 
+const sendMessage = () => {
+ return sqs
+  .sendMessage({
+    QueueUrl: process.env.QUEUE_URL,
+    MessageBody: event.body,
+    MessageAttributes: {
+      AttributeName: {
+        StringValue: "Attribute Value",
+        DataType: "String",
+      },
+    },
+  })
+  .promise(); 
+}
+
 const producer = async (event) => {
   let statusCode = 200;
   let message;
@@ -16,20 +31,13 @@ const producer = async (event) => {
   }
 
   try {
-    await sqs
-      .sendMessage({
-        QueueUrl: process.env.QUEUE_URL,
-        MessageBody: event.body,
-        MessageAttributes: {
-          AttributeName: {
-            StringValue: "Attribute Value",
-            DataType: "String",
-          },
-        },
-      })
-      .promise();
+    const results = await Promise.all(
+     [sendMessage(), sendMessage(), sendMessage(), sendMessage(), sendMessage(), sendMessage()]
+    );
 
-    message = "Message accepted!";
+    console.log(results);
+
+    message = "Messages accepted!";
   } catch (error) {
     console.log(error);
     message = error;
