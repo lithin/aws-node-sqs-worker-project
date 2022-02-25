@@ -1,0 +1,33 @@
+app: vaccination-certification-service-app
+service: aws-node-sqs-worker-project
+frameworkVersion: '2 || 3'
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  lambdaHashingVersion: '20201221'
+  profile: personal
+
+constructs:
+  jobs:
+    type: queue
+    worker:
+      handler: handler.consumer
+      environment:
+        TABLE: ${construct:thetable.tableName} 
+  thetable:
+    type: database/dynamodb-single-table
+
+functions:
+  producer:
+    handler: handler.producer
+    events:
+      - httpApi:
+          method: post
+          path: /produce
+    environment:
+      QUEUE_URL: ${construct:jobs.queueUrl}
+      TABLE: ${construct:thetable.tableName} 
+
+plugins:
+  - serverless-lift
